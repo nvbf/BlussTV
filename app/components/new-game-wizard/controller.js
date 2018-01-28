@@ -7,7 +7,8 @@
         };
     });
 
-    app.controller('newGameWizardController',  ['$scope', 'GameService', 'BlussTVService', function ($scope, GameService, BlussTVService) {
+    app.controller('newGameWizardController',  ['$scope', 'GameService', 'BlussTVService', 
+        function ($scope, GameService, BlussTVService) {
         var $ctrl = this;
 
         $scope.active = 0;
@@ -16,6 +17,9 @@
         $scope.nextButtonText = 'Fortsett';
 
         $scope.pages = [0, 1];
+
+        $scope.loadingEliteGames = true;
+        $scope.loadingEliteGame = false;
 
         $scope.numSetsBeach = [
             {
@@ -72,7 +76,7 @@
         $scope.gameTypes = [
             {
                 id: 0,
-                name: 'Volleyball - Mizunoligaen/Poengliga'
+                name: 'Volleyball - Mizunoligaen/Datavolley'
             },
             {
                 id: 1,
@@ -93,23 +97,28 @@
         $scope.liveEliteGames = true;
         $scope.eliteGames = [
             {
-                'homeTeam': 'BK Tromsø',
-                'awayTeam': 'Viking',
-                'poengligaGameUrl': 'http://www.poengliga.no/eliteh/1617/kamper/9web.html',
-                'title': 'Herrer: BK Tromsø - Viking'
-            },
-            {
-                'homeTeam': 'Randaberg',
-                'awayTeam': 'Oslo Volley',
-                'poengligaGameUrl': 'http://www.poengliga.no/elited/1617/kamper/10web.html',
-                'title': 'Damer: Randaberg - Oslo Volley'
+                'homeTeam': 'Test Borte',
+                'awayTeam': 'Test Hjemme',
+                'MatchID': '1111',
+                'title': 'Test Hjemme - Test Borte'
             }
         ];
 
-        BlussTVService.getLivePoengligaMatches().then ( function (matches) {
+        //BlussTVService.getLivePoengligaMatches().then ( function (matches) {
+        BlussTVService.getLiveDataVolleyMatches().then ( function (matches) {
+            $scope.loadingEliteGames = false;
             if (matches.length > 0) {
-                $scope.eliteGames = matches;
+                var testGame = $scope.eliteGames[0];
+
+                $scope.eliteGames = [];
+
+                for (var i = 0; i<matches.length; i++) {
+                    matches[i].title = matches[i].time + ': ' + matches[i].homeTeam.name + ' - ' + matches[i].awayTeam.name;
+                    $scope.eliteGames.push(matches[i]);
+                }
                 $scope.eliteGame = $scope.eliteGames[0];
+
+                $scope.eliteGames.push(testGame);
                 $scope.liveEliteGames = true;
             }
             else {
@@ -129,20 +138,35 @@
             }
         }
 
+        function newPlayerObject(numb) {
+            var number = "";
+            if (numb) {
+                number = numb;
+            }
+
+            return {
+                name: '',
+                id: Math.floor((Math.random() * 1000000000000) + 1),
+                number: number,
+                position: ''
+            };
+        }
+
         $scope.addPlayer = function (team, num) {
             if (!num) {
                 num = 1;
             }
+
             for (var i = 0; i<num; i++) {
                 if (team == 'home') {
-                    $scope.lowerDivisionVolleyball.homeTeam.players.push({name: ''});
+                    $scope.lowerDivisionVolleyball.homeTeam.players.push(newPlayerObject());
                 }
                 else {
-                    $scope.lowerDivisionVolleyball.awayTeam.players.push({name: ''});
+                    $scope.lowerDivisionVolleyball.awayTeam.players.push(newPlayerObject());
                 }
             }
         }
-
+    
         $scope.eliteGame = $scope.eliteGames[0];
 
         var updateProgressWidth = function () {
@@ -290,10 +314,26 @@
             }
 
             if ($scope.selectedGameType.id == 0) {
-                data = {poengligaGameUrl: $scope.eliteGame.poengligaGameUrl};
+                data = {
+                    dataVolley: {
+                        matchId: $scope.eliteGame.MatchID
+                    }
+                }
             }
 
+            $scope.loadingEliteGame = true;
+            var nbt = $scope.nextButtonText;
+
+            $scope.nextButtonText = 'Laster spillerbilder';
             GameService.createNewGame(data).then(function (gameData) {
+
+                if (!gameData) {
+                    alert('Fant ikke kampen. Er den oppretta i DataVolley?')
+                    $scope.loadingEliteGame = false;
+                    $scope.nextButtonText = nbt;
+                    return;
+                }
+
                 document.location.href = '/game/' + gameData.gameCode + '/control'
             });
         };

@@ -1,0 +1,53 @@
+.dialog-row {
+    width: 420px;
+}
+
+.player-image-container {
+    height: 440px;
+    position: relative;
+}
+
+.player-image-container img {
+    position: absolute;
+    left: 0px;
+    bottom: 0;
+}
+
+.player {
+    display: inline-block;
+}
+.player img {
+    max-width: 400px;
+    max-height: 440px;
+}
+
+.team-name {
+    text-align: center;
+    line-height: 96px;
+}
+
+.player-name {
+    flex-grow: 1;
+    white-space: nowrap;
+    font-size: 22px;
+}
+
+#player2 {
+    float: righT;
+}
+
+.player-info {
+    color: white;
+    background-color: #0074d9;
+    padding: 10px;
+    height: 90px;
+}
+
+.player-info table {
+    width: 100%;
+    font-size: 20px;
+}
+
+.player-info table tr td {
+    border-bottom: 1px solid #1065af;
+}

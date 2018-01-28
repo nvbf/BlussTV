@@ -2,7 +2,10 @@
     <fieldset>
         <legend>Statistics team compare</legend>
 
-
+        <div>
+            <button ng-repeat="i in [] | range:gameCurrentSet" ng-click="updateStats('set', i+1)" ng-class="{'option-active': currentStat == 'set' && currentStatSet == i+1}">Set {{i+1}}</button>
+            <button ng-click="updateStats('total')" ng-class="{'option-active': currentStat == 'total'}">Total</button>
+        </div>
         <table width="300">
             <thead>
             <th>{{homeTeam.name}}</th>
@@ -29,6 +32,11 @@
                 <td>Opponent error</td>
                 <td><input class="score-board-input" type="text" ng-model="awayTeam.opponentErrors"></td>
             </tr>
+            <tr>
+                <td><input class="score-board-input" type="text" ng-model="homeTeam.total"></td>
+                <td>Total</td>
+                <td><input class="score-board-input" type="text" ng-model="awayTeam.total"></td>
+            </tr>
         </table>
 
         <input type="checkbox" ng-model="manualTeamPoints" id="manualTeamPoints"> <label for="manualTeamPoints">Manual team compare</label>
@@ -44,6 +52,12 @@
 <div class="col-xs-12  col-md-8">
     <fieldset>
         <legend>Statistics player compare</legend>
+
+        <div>
+            <button ng-repeat="i in [] | range:gameCurrentSet" ng-click="updateStats('set', i+1)" ng-class="{'option-active': currentStat == 'set' && currentStatSet == i+1}">Set {{i+1}}</button>
+            <button ng-click="updateStats('total')" ng-class="{'option-active': currentStat == 'total'}">Total</button>
+        </div>
+
 
         <table width="300">
             <thead>

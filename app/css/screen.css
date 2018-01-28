@@ -1,211 +1,70 @@
 body {
-    width: 1280px;
-    height: 720px;
+    width: 1920px;
+    height: 1080px;
     overflow: hidden;
     padding: 0;
     margin: 0;
-    font-family: Calibri,Arial;
+    font-family: 'Open Sans', Calibri, Arial;
 }
 
-th, td {
+th,
+td {
     color: white;
 }
-
 .screen {
-    width: 1280px;
-    height: 720px;
+    width: 1920px;
+    height: 1080px;
     overflow: hidden;
     position: absolute;
     left: 0;
     top: 0;
 
-    /*
-    background-image: url(/graphics/testbg.jpg);
-    background-color: red;
-    */
+    /*background-image: url(/graphics/testbg.jpg);
+    background-color: red;*/
 
     background-repeat: no-repeat;
     background-size: cover;
-
-}
-.dialog {
-    position: absolute;
-    color: white;
-    top: 10px;
-    border-radius: 5px;
 }
 
-.dialog-heading {
-    color: black;
-    width: 908px;
-    height: 96px;
-    background: #ccc;
-    background: linear-gradient(rgba(240, 240, 240, 1), rgba(210, 210, 210, 1));
-    font-family: 'Source Sans Pro', sans-serif;
+.generic-row {
+    height: 55px;
+    font-family: 'Open Sans';
+    font-size: 36px;
+    color: #222b38;
+    background-color: white;
+    line-height: 55px;
     text-transform: uppercase;
-
-    margin-bottom: 10px;
-}
-
-.dialog-row {
-    width: 600px;
-    height: 48px;
-    background-color: blue;
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-flex-direction: row;
-    -ms-flex-direction: row;
-    flex-direction: row;
-    letter-spacing: 2px;
-    border-bottom: 1px solid #001f3f;
-    font-family: 'Source Sans Pro', sans-serif;
-
-      background: blue;
-      background: linear-gradient(#0074D9, #001f3f);
-      font-weight: 600;
-      font-size: 28px;
-      padding-left: 16px;
-      line-height: 48px;
-      color: white;
-      text-shadow: 1px 1px black;
-}
-
-.dialog-center-row-content .dialog-row {
-    text-align: center;
-}
-
-.dialog-row-number-column {
-    width: 200px;
-}
-
-.dialog-row-role {
-    height: 100%;
-    width: 160px;
-    background: blue;
-    background: linear-gradient(#0074D9, #001f3f, #001f3f);
     font-weight: 600;
-    font-size: 20px;
+}
+
+.generic-row .number {
+    width: 48px;
+    height: 48px;
+    color: white;
+    background-color: #222b38;
     line-height: 48px;
-    color: #FFFFFF;
-    text-transform: uppercase;
     text-align: center;
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.secondary-row {
+    background-color: #29aae7;
+    color: white;
+    font-size: 32px;
+    font-weight: 400;
+}
+
+.row-logo-container {
+    width: 96px;
+    height: 96px;
     position: relative;
+    padding: 7px;
+    background-repeat: no-repeat;
+    background-size: cover;
     overflow: hidden;
 }
 
-.dialog-row-double-width-role {
-    width: 320px;
+.hidden {
+    display: none;
 }
-
-.dialog-row-spacer {
-    height: 100%;
-    width: 6px;
-    background: white;
-    background: linear-gradient(#ccc, #fff, #999);
-}
-
-.dialog-club-logo {
-    float: left;
-    margin-right: 50px;
-}
-
-.dialog-club-logo img {
-    height: 50px;
-}
-
-.dialog-body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-
-.fullscreen-background-image {
-    position: absolute;
-    left: 0;
-    top: 0;
-}
-
-.fullscreen-background-image img {
-    width: 1280px;
-    height: 720px;
-}
-
-.hidden-bottom {
-    top: 720px !important;
-}
-
-.hidden-left {
-     left: -1280px !important;
- }
-
-.hidden-right {
-    left: 1280px !important;
-}
-
-.team {
-    display: flex;
-    justify-content: flex-start;
-    flex-direction: row;
-    heighT: 100%;
-    align-items: center;
-}
-
-.team-logo {
-    margin-right: 20px;
-    margin-left: 20px;
-}
-
-.team-logo img {
-    max-height: 80px;
-}
-
-.team-name {
-    font-size: 36px;
-    text-align: left;
-}
-
-.teams-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-direction: row;
-}
-
-.dialog-body {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-direction: column;
-}
-
-.dialog-row-number {
-    height: 100%;
-    width: 72px;
-    background: white;
-    background: linear-gradient(#fff, #aaa);
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
-    align-items: center;
-    justify-content: center;
-    margin-right: 20px;
-
-    font-size: 42px;
-    font-weight: 400;
-    color: #001f3f;
-}
-
-.slide {
-    -webkit-transition: all 0.7s ease-out;
-    -moz-transition: all 0.7s ease-out;
-    -ms-transition: all 0.7s ease-out;
-    -o-transition: all 0.7s ease-out;
-    transition: all 0.7s ease-out;
-}
-

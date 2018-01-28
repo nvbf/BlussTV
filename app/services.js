@@ -12,6 +12,7 @@ angular.module('services', [])
     .factory('BlussTVService', ['$http', '$q', function ($http, $q) {
         var f = {};
 
+
         f.getLivePoengligaMatches = function () {
             var deferred = $q.defer();
             $http({
@@ -28,6 +29,60 @@ angular.module('services', [])
 
             return deferred.promise;
         };
+
+        f.getLiveDataVolleyMatches = function () {
+            var deferred = $q.defer();
+            $http({
+                method: 'GET',
+                url: '/datavolley/current-matches'
+            }).then(function (response) {
+                var games = response.data;
+
+                deferred.resolve(games);
+
+            }, function () {
+                deferred.resolve([]);
+            });
+
+            return deferred.promise;
+        }
+
+        f.getNormalizedStringCompare = function (teamName) {
+            var sortParts = teamName.split(/\//);
+
+            // Sort the parts, for beach so we get it saved as the same person first:
+            sortParts.sort();
+            teamName = sortParts.join("_");
+            return teamName.replace(/\//g, "_").replace(/\s+/g, '').toLowerCase();
+        }
+
+        f.getImagesByTeamName = function (teamName) {
+            var deferred = $q.defer();
+
+            teamName = f.getNormalizedStringCompare(teamName);
+
+            //teamName = "veiensvenby";
+
+
+            var url = $.cloudinary.url(teamName, {format: 'json', type: 'list'});
+
+
+            $.getJSON(url)
+                .done(function (data) {
+
+                    deferred.resolve(data.resources);
+
+
+                })
+                .fail(function () {
+
+                }).always(function () {
+                deferred.resolve([]);
+            });
+
+            return deferred.promise;
+        };
+
 
         f.getAllTeams = function () {
             var deferred = $q.defer();
@@ -204,6 +259,10 @@ angular.module('services', [])
         var game = null;
 
         var currentScore = {};
+        var currentLineUp = {
+            homeTeam: ["", "", "", "", "", ""],
+            awayTeam: ["", "", "", "", "", ""],
+        };
 
         var f = {};
 
@@ -219,42 +278,62 @@ angular.module('services', [])
 
         var updateScore = function () {
             console.log(game);
-            if (!game || !game.poengligaGameUrl) {
+            if (!game || (!game.poengligaGameUrl && !game.dataVolley) ) {
                 setTimeout(updateScore, scoreBoardUpdateTime*1000);
                 return;
             }
 
+            var url = '/update-score';
+
+            if (game.dataVolley) {
+                url = '/datavolley/NVBF/' + game.dataVolley.matchId + '/update-score';
+            }
+
             $http({
                 method: 'GET',
-                url: '/update-score',
+                url: url,
                 params: {url: game.poengligaGameUrl}
             }).then(function (response) {
                 var score = response.data;
 
-                if (JSON.stringify(currentScore) != JSON.stringify(score)) {
-                    currentScore = score;
+                if (typeof(score) == "object" && JSON.stringify(currentScore) != JSON.stringify(score)) {
 
-                    console.log(score);
-                    for (var i in score.homeTeam.players) {
-                        var pl = score.homeTeam.players[i];
-                        var p = f.getPlayerByNumber('home', pl.number);
-                        if (p) {
-                            p.ace = pl.ace;
-                            p.blocks = pl.blocks;
-                            p.attack = pl.attack;
+                    try {
+                        currentScore = score;
+
+                        console.log(score);
+                        for (var i in score.homeTeam.players) {
+                            var pl = score.homeTeam.players[i];
+                            var p = f.getPlayerByNumber('home', pl.number);
+                            if (p) {
+                                p.ace = pl.ace;
+                                p.blocks = pl.blocks;
+                                p.attack = pl.attack;
+                            }
+                        }
+
+                        for (var i in score.awayTeam.players) {
+                            var pl = score.awayTeam.players[i];
+                            var p = f.getPlayerByNumber('away', pl.number);
+                            if (p) {
+                                p.ace = pl.ace;
+                                p.blocks = pl.blocks;
+                                p.attack = pl.attack;
+                            }
+                        }
+                        notifyObservers('score-update');
+                        if (score.homeTeam.lineup) {
+                            var newLineup = {homeTeam: score.homeTeam.lineup, awayTeam: score.awayTeam.lineup};
+                            console.log(newLineup);
+                            if (JSON.stringify(currentLineUp) != JSON.stringify(newLineup)) {
+                                currentLineUp = newLineup;
+                                notifyObservers('lineup-update');
+                            }
                         }
                     }
-
-                    for (var i in score.awayTeam.players) {
-                        var pl = score.awayTeam.players[i];
-                        var p = f.getPlayerByNumber('away', pl.number);
-                        if (p) {
-                            p.ace = pl.ace;
-                            p.blocks = pl.blocks;
-                            p.attack = pl.attack;
-                        }
+                    catch (err) {
+                        // Hopefully a new iteration will fix this
                     }
-                    notifyObservers('score-update');
                 }
 
                 setTimeout(updateScore, scoreBoardUpdateTime*1000);
@@ -268,6 +347,31 @@ angular.module('services', [])
 
         var observerCallbacks = [];
         var f = {};
+
+        f.updatePlayersFromServer = function () {
+            if (!game) {
+                return false;
+            }
+            console.log(game);
+            $http({
+                method: 'GET',
+                url: '/datavolley/NVBF/' + game.dataVolley.matchId + '/game-info',
+            }).then(function (response) {
+                console.log(response.data);
+
+
+                game.homeTeam.players = response.data.homeTeam.players;
+                game.awayTeam.players = response.data.awayTeam.players;
+                notifyObservers('players-update');
+
+
+            }, function (err) {
+                alert('reject', err);
+                deferred.reject(err);
+            });
+        }
+
+
         //register an observer
         f.registerObserverCallback = function(type, callback){
             if (typeof type === 'string') {
@@ -291,6 +395,11 @@ angular.module('services', [])
         };
 
 
+        f.setCurrentScore = function (score) {
+            currentScore = score;
+            notifyObservers('score-update');
+        }
+
         f.getCurrentScore = function () {
             return currentScore;
         };
@@ -302,6 +411,10 @@ angular.module('services', [])
             });
         };
 
+        f.getCurrentLineup = function () {
+            return currentLineUp;
+        }
+
         f.getGameType = function () {
             if (game) {
                 return game.type;
@@ -310,6 +423,7 @@ angular.module('services', [])
                 return null;
             }
         }
+
 
         // Dummy functions:
         f.createNewGame = function (options) {
@@ -335,8 +449,9 @@ angular.module('services', [])
             };
 
 
+            // Deprecated :p
             if (options && options.poengligaGameUrl) {
-                f.getGameInfo(options.poengligaGameUrl).then ( function (data) {
+                f.getGameInfo(options).then ( function (data) {
                     console.log(data);
                     data.manualScore = false;
 
@@ -377,6 +492,40 @@ angular.module('services', [])
                     });
                 });
             }
+            else if (options && options.dataVolley) {
+                f.getGameInfo(options).then ( function (data) {
+
+                    if (!data) {
+                        deferred.resolve(null);
+                        return;
+                    }
+
+                    angular.extend(gameDefaults, data);
+
+                    game = gameDefaults;
+
+                    // This is not extended?
+                    game.homeTeam.jersey = {
+                        player: 'red',
+                        libero: 'black'
+                    };
+
+                    game.awayTeam.jersey = {
+                        player: 'blue',
+                        libero: 'red'
+                    };
+                    game.setPoints = [25, 25, 25, 25, 15];
+                    game.manualScore = false;
+                    game.dataVolley = {
+                        matchId: options.dataVolley.matchId,
+                        fedCode: 'NVFB'
+                    }
+                    game.gameCode = createGameId();
+
+                    f.saveChanges(game);
+                    deferred.resolve(game);
+                });
+            }
             else {
                 // Normal game:
                 angular.extend(gameDefaults, options);
@@ -412,41 +561,87 @@ angular.module('services', [])
             }
         }
 
-        f.getGameInfo = function (gameUrl) {
+        f.getGameInfo = function (options) {
+
             var deferred = $q.defer();
 
-            if (game) {
-                deferred.resolve(game);
-                return deferred.promise;
+            if (!options) {
+                if (game) {
+                    deferred.resolve(game);
+                    return deferred.promise;
+                }
             }
 
-            if (!gameUrl && game) {
-                gameUrl = game.poengligaGameUrl;
+            if (options.dataVolley) {
+
+                if (game) {
+                    deferred.resolve(game);
+                    return deferred.promise;
+                }
+
+                $http({
+                    method: 'GET',
+                    url: '/datavolley/NVBF/'+options.dataVolley.matchId+'/game-info',
+                }).then(function (response) {
+                    console.log(response.data);
+
+                    if (response.data == 'null') {
+                        response.data = null;
+                    }
+
+                    deferred.resolve(response.data);
+                    notifyObservers('game-info');
+
+                    // HACK HACK HACK, just reload the page to get the new info :D
+                    //document.location.reload();
+
+
+                }, function (err) {
+                    alert('reject', err);
+                    deferred.reject(err);
+                });
             }
-            else if (!gameUrl && !game) {
-                gameUrl = 'http://www.poengliga.no/eliteh/1617/kamper/9web.html';
+            else {
+
+
+                if (game) {
+                    deferred.resolve(game);
+                    return deferred.promise;
+                }
+                gameUrl = options.poengligaGameUrl
+                if (!gameUrl && game) {
+                    gameUrl = game.poengligaGameUrl;
+                }
+                else if (!gameUrl && !game) {
+                    gameUrl = 'http://www.poengliga.no/eliteh/1617/kamper/9web.html';
+                }
+
+                $http({
+                    method: 'GET',
+                    url: '/game-info',
+                    params: {url: gameUrl}
+                }).then(function (response) {
+
+                    deferred.resolve(response.data);
+
+                    notifyObservers('game-info');
+
+                    // HACK HACK HACK, just reload the page to get the new info :D
+                    // document.location.reload();
+
+
+                }, function (err) {
+                    deferred.reject(err);
+                });
             }
-
-            $http({
-                method: 'GET',
-                url: '/game-info',
-                params: {url: gameUrl}
-            }).then(function (response) {
-
-                deferred.resolve(response.data);
-
-                notifyObservers('game-info');
-
-                // HACK HACK HACK, just reload the page to get the new info :D
-               // document.location.reload();
-
-
-            }, function (err) {
-                deferred.reject(err);
-            });
-
             return deferred.promise;
         };
+
+        f.getType = function () {
+            if (game) {
+                return game.type;
+            }
+        }
 
         f.getTeamName = function (team) {
             if (!game) {
@@ -545,6 +740,22 @@ angular.module('services', [])
             localStorage.setItem(key, JSON.stringify(value));
         };
 
+        f.addPlayerPicture = function(playerId, url) {
+            game.homeTeam.players.forEach(player => {
+                if(player.id === playerId) {
+                    player.image = url;
+                }
+            });
+
+            game.awayTeam.players.forEach(player => {
+                if(player.id === playerId) {
+                player.image = url;
+            }
+        });
+
+            f.setStoredValue('game', game);
+        }
+
         game = f.getStoredValue('game');
 
 
@@ -564,7 +775,7 @@ angular.module('services', [])
             var deferred = $q.defer();
                 if ((tvWindow == null) || (tvWindow.closed)  )
                 {
-                    tvWindow = window.open(url,'TV','height=720,width=1280');
+                    tvWindow = window.open(url,'TV','height=1080,width=1920');
                     tvWindow.addEventListener('load', function () {
 
                         tvWindow.getOnWebSocketConnect( function () {

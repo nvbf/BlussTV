@@ -3,6 +3,8 @@
     var app = angular.module('blussTV');
     app.controller('lineupController', ['$scope', 'GameService', 'CasparCGService', function ($scope, GameService, CasparCGService) {
 
+        $scope.manualLineup = false;
+        
         $scope.homeTeamLineup = [
             {number: '', pos: 'I'},
             {number: '', pos: 'II'},
@@ -122,12 +124,38 @@
                     $scope.awayShowing = true;
                 }
             }
+        });
+
+
+        var updateLinup = function () {
+
+            var lineUps = GameService.getCurrentLineup();
+            for (var i = 0; i<lineUps.homeTeam.length; i++) {
+                $scope.homeTeamLineup[i].number = lineUps.homeTeam[i];
+            }
+
+            for (var i = 0; i<lineUps.awayTeam.length; i++) {
+                $scope.awayTeamLineup[i].number = lineUps.awayTeam[i];
+            }
+
+        }
+
+        GameService.registerObserverCallback(['lineup-update'], function (type, data) {
+
+            // No updates if manual:
+            if ($scope.manualLineup) {
+                return;
+            }
+
+            updateLinup();
 
         });
 
         $scope.getGameType = function () {
             return GameService.getGameType();
         }
+
+        updateLinup();
 
     }]);
 })(window.angular);
